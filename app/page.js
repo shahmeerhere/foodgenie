@@ -271,7 +271,7 @@ const App = () => {
                 <div className="lg:w-2/3 w-full">
                     <div className="p-6 bg-white rounded-3xl shadow-xl border-2 border-teal-200 transition-all duration-500 hover:shadow-teal-300/50">
                         <h2 className="text-3xl font-bold mb-6 flex items-center text-teal-600">
-                            <Zap className="mr-3 h-7 w-7 text-orange-500" /> What's for Dinner? 🍲
+                            <Zap className="mr-3 h-7 w-7 text-orange-500" /> What is for Dinner? 🍲
                         </h2>
                         <form onSubmit={handleGenerateClick}>
                             <div className="mb-6">
