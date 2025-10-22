@@ -69,7 +69,7 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-amber-50 text-gray-800 font-sans p-6">
       <header className="text-center mb-10">
-        <h1 className="text-5xl font-extrabold text-transparent bg-clip-text bg-linear-to-r from-teal-500 to-orange-600">AI CHEF 🧑‍🍳</h1>
+        <h1 className="text-5xl font-extrabold text-transparent bg-clip-text bg-linear-to-r from-teal-500 to-orange-600">FOOD GENIE 🧑‍🍳</h1>
         <p className="text-gray-600 mt-2 text-lg">Instantly create recipes with your ingredients.</p>
         {!apiKey && <p className="mt-3 bg-red-100 text-red-700 p-2 rounded-lg">⚠️ Mock mode active – Gemini API key missing.</p>}
       </header>
