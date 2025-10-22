@@ -1,11 +1,11 @@
 "use client";
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Zap, Clock, List, Loader2 } from "./components/Icons";
 import HistoryItem from "./components/HistoryItem";
 import { formatRecipeText } from "./components/RecipeFormatter";
 
-const apiKey = ""; // ⚠️ Add Gemini API Key here if available
+const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
 const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
 
 export default function HomePage() {
@@ -16,21 +16,23 @@ export default function HomePage() {
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(false);
   const [statusMessage, setStatusMessage] = useState("");
+  const recipeRef = useRef(null);
 
-  // Simple reusable fade-in animation
+  // Framer Motion variants
   const fadeInUp = {
     hidden: { opacity: 0, y: 30 },
     visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } },
   };
 
-  // AI Generation
   const generateRecipe = useCallback(async () => {
-    if (!ingredients || loading) return;
+    if (!ingredients.trim() || loading) return;
+
     setLoading(true);
-    setStatusMessage("Generating recipe...");
     setDishName(null);
     setRecipe(null);
+    setStatusMessage("Generating recipe...");
 
+    // Mock mode if API key missing
     if (!apiKey) {
       await new Promise((r) => setTimeout(r, 2000));
       const mockName = "Simulated Garlic Butter Pasta";
@@ -40,9 +42,11 @@ export default function HomePage() {
       setHistory([{ recipe: `${mockName}\n${mockBody}`, ingredients, time, createdAt: new Date().toLocaleDateString() }, ...history]);
       setStatusMessage("Simulated recipe created!");
       setLoading(false);
+      recipeRef.current?.scrollIntoView({ behavior: "smooth" });
       return;
     }
 
+    // Real API call
     try {
       const payload = {
         contents: [{ parts: [{ text: `Create a recipe using: ${ingredients} in ${time} minutes.` }] }],
@@ -65,8 +69,9 @@ export default function HomePage() {
       setRecipe(body);
       setHistory([{ recipe: text, ingredients, time, createdAt: new Date().toLocaleDateString() }, ...history]);
       setStatusMessage("Recipe generated!");
-    } catch (e) {
-      console.error(e);
+      recipeRef.current?.scrollIntoView({ behavior: "smooth" });
+    } catch (err) {
+      console.error(err);
       setStatusMessage("Error generating recipe.");
     } finally {
       setLoading(false);
@@ -75,14 +80,14 @@ export default function HomePage() {
 
   return (
     <motion.div
-      className="min-h-screen bg-linear-to-br from-amber-50 via-orange-50 to-teal-50 text-gray-800 font-sans p-6"
+      className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-teal-50 text-gray-800 font-sans p-6"
       initial="hidden"
       animate="visible"
       variants={fadeInUp}
     >
       {/* HEADER */}
       <motion.header className="text-center mb-10" variants={fadeInUp}>
-        <h1 className="text-5xl font-extrabold text-transparent bg-clip-text bg-linear-to-r from-teal-500 to-orange-600 drop-shadow-lg">
+        <h1 className="text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-teal-500 to-orange-600 drop-shadow-lg">
           FOOD GENIE 🧑‍🍳
         </h1>
         <p className="text-gray-600 mt-2 text-lg">Instantly create recipes with your ingredients.</p>
@@ -90,7 +95,7 @@ export default function HomePage() {
       </motion.header>
 
       <div className="flex flex-col lg:flex-row gap-8 max-w-7xl mx-auto">
-        {/* INPUT SECTION */}
+        {/* INPUT + GENERATE */}
         <motion.div className="lg:w-2/3" variants={fadeInUp}>
           <motion.div
             className="p-6 bg-white rounded-3xl shadow-lg border border-teal-200 hover:shadow-2xl transition-all duration-500 hover:-translate-y-1"
@@ -123,51 +128,46 @@ export default function HomePage() {
             <motion.button
               onClick={generateRecipe}
               disabled={loading}
-              className="w-full py-3 bg-linear-to-r from-orange-500 to-red-500 text-white font-semibold rounded-xl shadow-md disabled:opacity-50 relative overflow-hidden group"
+              className="w-full py-3 bg-gradient-to-r from-orange-500 to-red-500 text-white font-semibold rounded-xl shadow-md disabled:opacity-50 relative overflow-hidden group"
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
             >
-              <span className="absolute inset-0 bg-linear-to-r from-orange-400 to-teal-400 opacity-0 group-hover:opacity-40 transition-opacity duration-500 blur-md"></span>
+              <span className="absolute inset-0 bg-gradient-to-r from-orange-400 to-teal-400 opacity-0 group-hover:opacity-40 transition-opacity duration-500 blur-md"></span>
               {loading ? "Generating..." : "Generate My Recipe 🚀"}
             </motion.button>
           </motion.div>
 
           {/* GENERATED RECIPE DISPLAY */}
-          <motion.div
-            className="mt-8 bg-white p-6 rounded-3xl shadow-lg border border-orange-200 hover:shadow-2xl transition-all duration-500 hover:-translate-y-1"
-            variants={fadeInUp}
-          >
-            <h2 className="text-2xl font-bold text-teal-600 mb-4">Your Dish 🍽️</h2>
-            {loading ? (
-              <div className="text-center text-orange-500">
-                <Loader2 className="mx-auto animate-spin" />
-                {statusMessage}
-              </div>
-            ) : recipe ? (
-              <>
-                <motion.h3
-                  className="text-3xl font-bold text-orange-600 mb-4"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.2 }}
-                >
-                  {dishName}
-                </motion.h3>
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.4 }}
-                >
-                  {formatRecipeText(recipe)}
-                </motion.div>
-              </>
-            ) : (
-              <p className="text-gray-500 italic">Enter ingredients to get started!</p>
-            )}
-          </motion.div>
+          {dishName && recipe && (
+            <motion.div
+              ref={recipeRef}
+              className="mt-8 bg-white p-6 rounded-3xl shadow-lg border border-orange-200 hover:shadow-2xl transition-all duration-500 hover:-translate-y-1"
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ duration: 0.5 }}
+            >
+              <h2 className="text-2xl font-bold text-teal-600 mb-4">Your Dish 🍽️</h2>
+              <motion.h3
+                className="text-3xl font-bold text-orange-600 mb-4 bg-clip-text bg-gradient-to-r from-red-500 to-orange-400 text-transparent"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+              >
+                {dishName}
+              </motion.h3>
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.4 }}
+                className="leading-relaxed text-gray-700"
+              >
+                {formatRecipeText(recipe)}
+              </motion.div>
+            </motion.div>
+          )}
         </motion.div>
 
-        {/* HISTORY SECTION */}
+        {/* HISTORY */}
         <motion.div
           className="lg:w-1/3"
           initial={{ opacity: 0, x: 40 }}
@@ -185,26 +185,16 @@ export default function HomePage() {
                 className="space-y-4 max-h-[70vh] overflow-y-auto"
                 initial="hidden"
                 animate="visible"
-                variants={{
-                  hidden: { opacity: 0 },
-                  visible: {
-                    opacity: 1,
-                    transition: { staggerChildren: 0.1 },
-                  },
-                }}
+                variants={{ hidden: { opacity: 0 }, visible: { opacity: 1, transition: { staggerChildren: 0.1 } } }}
               >
                 {history.map((item, idx) => (
-                  <motion.div
-                    key={idx}
-                    variants={fadeInUp}
-                    whileHover={{ scale: 1.02 }}
-                    transition={{ duration: 0.3 }}
-                  >
+                  <motion.div key={idx} variants={fadeInUp} whileHover={{ scale: 1.02 }} transition={{ duration: 0.3 }}>
                     <HistoryItem
                       item={item}
                       onSelect={(title, body) => {
                         setDishName(title);
                         setRecipe(body);
+                        recipeRef.current?.scrollIntoView({ behavior: "smooth" });
                       }}
                     />
                   </motion.div>
