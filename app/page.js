@@ -102,7 +102,7 @@ export default function HomePage() {
             whileHover={{ scale: 1.02 }}
           >
             <h2 className="text-3xl font-bold text-teal-600 flex items-center mb-6">
-              <Zap className="mr-3 text-orange-500" /> What's for Dinner?
+              <Zap className="mr-3 text-orange-500" /> What&apos;s for Dinner?
             </h2>
 
             <textarea

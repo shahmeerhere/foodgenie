@@ -13,6 +13,7 @@ const geistMono = Geist_Mono({
 
 
   export const metadata = {
+    metadataBase: new URL('https://foodgenie-lg9n.vercel.app'),
     title: "FoodGenie | AI Recipe App",
     description: "Generate personalized recipes instantly with AI.",
     openGraph: {
